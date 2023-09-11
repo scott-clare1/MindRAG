@@ -5,7 +5,7 @@ mental health taken from the following resource https://www.nhs.uk/mental-health
 
 The application is set up to be run locally and so requires the user to download a llama model for text generation. I have used a quantized llama-2-7b model (llama-2-7b-chat.ggmlv3.q2_K.bin) which 
 can be downloaded from HuggingFace here: https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML. This model uses the most aggresive quantization possible reducing the floating-point precision down to 
-2-bit - this has meant that the application can return responses in roughly 10 seconds on a Macbook Pro.
+2-bit - this has meant that the application can return responses in roughly 15 seconds on a Macbook Pro.
 
 The application is very simple and relies on existing techologies like langhcain, sentence-transformers and of course llama-2. First we create a vector database of the scraped NHS data using a 
 sentence-transformers embedding model - this model creates highly dimensional vector representations or embeddings of 500 token chunks of the data. Once the vector db is set up we can retrieve 
@@ -40,14 +40,19 @@ pip install -r requirments.txt
 The vector database can be set up with the following line of code:
 
 ```
-python -m vector_store.py
+python vector_store.py
 ```
 
 ## Running Streamlit App ##
 As discussed previously you will need to download whichever llama model you wish to use and then save wherever you like - in the below example I have saved the model in the models subdirectory.
+The LLM model temperature and number of tokens outputted are set as defaults at 0.01 and 300, respectively. However, these can be changed with the command line arguments below.
 ```
 streamlit run src/mind_rag_chat.py -- --llm_path models/llama-2-7b-chat.ggmlv3.q2_K.bin --temperature 0.01 --max_new_tokens 300
 ```
 
 ## Application in action ##
+
+
+https://github.com/scott-clare1/MindRAG/assets/88718621/0f51654b-623b-4c01-a5db-909b2526f142
+
 
