@@ -53,6 +53,11 @@ streamlit run src/mind_rag_chat.py -- --llm_path models/llama-2-7b-chat.ggmlv3.q
 ## Application in action ##
 
 
-https://github.com/scott-clare1/MindRAG/assets/88718621/0f51654b-623b-4c01-a5db-909b2526f142
 
+
+https://github.com/scott-clare1/MindRAG/assets/88718621/875ff169-650a-4359-80f1-6922d03ff367
+
+
+
+https://github.com/scott-clare1/MindRAG/assets/88718621/2f21a3a3-6b0f-4675-a7a3-409f5c706477
 
