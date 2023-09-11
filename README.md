@@ -8,8 +8,8 @@ can be downloaded from HuggingFace here: https://huggingface.co/TheBloke/Llama-2
 2-bit - this has meant that the application can return responses in roughly 15 seconds on a Macbook Pro.
 
 The application is very simple and relies on existing techologies like langhcain, sentence-transformers and of course llama-2. First we create a vector database of the scraped NHS data using a 
-sentence-transformers embedding model - this model creates highly dimensional vector representations or embeddings of 500 token chunks of the data. Once the vector db is set up we can retrieve 
-semantically similar documents based on a prompt from the streamlit app e.g. what is depression? This prompt is also passed through the embedding model which is used as query to the db to find 
+sentence-transformers embedding model - this model creates highly dimensional vector representations or embeddings of 500 token chunks of the data. Once the vector database is set up we can retrieve 
+semantically similar documents based on a prompt from the streamlit app e.g. what is depression? This prompt is also passed through the embedding model which is used as query to the database to find 
 similar documents. These similar documents are then passed into a question-answer template with the retrieved documents used as context. The question-answer template can be seen below:
 
 ```
@@ -23,7 +23,7 @@ Helpful answer:
 """
 ```
 
-In this instance "question" is the prompt "what is depression?" and the context will hopefully be whatever nhs documents that discuss depression.
+In this instance "question" is the prompt "what is depression?" and the context will hopefully be whatever NHS documents that discuss depression.
 
 This question-answer prompt is then used to be passed into our large language model to provide a generated response based on the context given.
 
