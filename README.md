@@ -12,6 +12,7 @@ sentence-transformers embedding model - this model creates highly dimensional ve
 semantically similar documents based on a prompt from the streamlit app e.g. what is depression? This prompt is also passed through the embedding model which is used as query to the db to find 
 similar documents. These similar documents are then passed into a question-answer template with the retrieved documents used as context. The question-answer template can be seen below:
 
+```
 """
 Use the following pieces of information to answer the user's question.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
@@ -20,6 +21,7 @@ Question: {question}
 Only return the helpful answer below and nothing else.
 Helpful answer:
 """
+```
 
 In this instance "question" is the prompt "what is depression?" and the context will hopefully be whatever nhs documents that discuss depression.
 
