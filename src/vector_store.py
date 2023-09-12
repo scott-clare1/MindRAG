@@ -16,11 +16,15 @@ class VectorDB:
         self.embedding_model = embedding_model
         self.db_path = "vectorstore/db_faiss"
 
-    def load_documents(self, data: pd.DataFrame, chunk_size: int = 500, chunk_overlap: int = 50) -> None:
+    def load_documents(
+        self, data: pd.DataFrame, chunk_size: int = 500, chunk_overlap: int = 50
+    ) -> None:
         csv.field_size_limit(sys.maxsize)
         loader = DataFrameLoader(data, page_content_column="documents")
         documents = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
         self.texts = text_splitter.split_documents(documents)
 
     def set_up_vector_db(self) -> None:
