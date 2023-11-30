@@ -5,13 +5,13 @@ import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import csv
 import sys
-from rag import embedding_model
+from rag import EMBEDDING_MODEL
 
 
 class VectorDB:
     def __init__(
         self,
-        embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings,
+        embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings = EMBEDDING_MODEL,
     ):
         self.embedding_model = embedding_model
         self.db_path = "vectorstore/db_faiss"
@@ -35,6 +35,6 @@ class VectorDB:
 
 if __name__ == "__main__":
     data = pd.read_csv("data/nhs_mental_health_data.csv")
-    db = VectorDB(embedding_model)
+    db = VectorDB()
     db.load_documents(data)
     db.set_up_vector_db()

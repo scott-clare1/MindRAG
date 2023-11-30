@@ -1,25 +1,33 @@
 import streamlit as st
-from rag import VectorDBQuery, embedding_model
+from inference.inference import embedding_model
 import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--llm_path", action="store", type=str)
-parser.add_argument("--temperature", action="store", type=float, default=0.01)
-parser.add_argument("--max_new_tokens", action="store", type=int, default=300)
-try:
-    args = parser.parse_args()
-except SystemExit as e:
-    os._exit(e.code)
+import requests
 
 
-@st.cache_resource
-def load_query_agent():
-    return VectorDBQuery(
-        embedding_model, args.llm_path, args.temperature, args.max_new_tokens
-    )
+def build_output_text(response: dict) -> str:
+    text = """
+    Unfortunately, I was not able to provide a coherent response to this query - 
+    could you try asking again and making sure the question is about mental health?
+    """
+    result = response["result"]
+    if len(set(result.split())) > len(result.split()) // 2:
+        statement = []
+        result_html = "<p>" + result + "</p>"
+        statement.append(result_html)
+        statement.append("<p>Generated from the following documents:</p>")
+        source_documents = response["source_documents"]
+        for doc in source_documents:
+            content_html = f'<a href="{doc.metadata["links"]}">{doc.metadata["title"].strip()}</a><br>'
+            if content_html not in statement:
+                statement.append(content_html)
+        text = f"{' '.join(statement)}"
+    return text
 
 
-response = load_query_agent()
+def post(question):
+    response = requests.post("http://localhost:5000/inference", json={"question": question})
+    return response.json()["output"]
+
 
 st.title("MindRAG")
 st.write(
@@ -55,8 +63,8 @@ for idx, i in enumerate(st.session_state["chat_history"]):
             st.write(i["content"])
         elif idx == len(st.session_state["chat_history"]) - 1:
             with st.status("Thinking...", expanded=True) as status:
-                output = response(i["content"])
-                st.write(output, unsafe_allow_html=True)
+                output = post(i["content"])
+                st.write(build_output_text(output), unsafe_allow_html=True)
                 st.session_state["chat_history"][idx]["content"] = output
                 status.update(label="Complete!", state="complete", expanded=True)
         else:

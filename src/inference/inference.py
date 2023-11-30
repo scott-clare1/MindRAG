@@ -6,7 +6,7 @@ from langchain.chains import RetrievalQA
 import langchain
 
 
-embedding_model = HuggingFaceEmbeddings(
+EMBEDDING_MODEL = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={"device": "cpu"}
 )
 
@@ -14,8 +14,8 @@ embedding_model = HuggingFaceEmbeddings(
 class VectorDBQuery:
     def __init__(
         self,
-        embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings,
         model_path: str,
+        embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings = EMBEDDING_MODEL,
         temperature: float = 0.01,
         max_new_tokens: int = 300,
     ):
@@ -45,23 +45,6 @@ class VectorDBQuery:
             chain_type_kwargs={"prompt": self.prompt},
         )
 
-    @staticmethod
-    def _build_output_text(response: dict) -> str:
-        text = "Unfortunately, I was not able to provide a coherent response to this query - could you try asking again and making sure the question is about mental health?"
-        result = response["result"]
-        if len(set(result.split())) > len(result.split()) // 2:
-            statement = []
-            result_html = "<p>" + result + "</p>"
-            statement.append(result_html)
-            statement.append("<p>Generated from the following documents:</p>")
-            source_documents = response["source_documents"]
-            for doc in source_documents:
-                content_html = f'<a href="{doc.metadata["links"]}">{doc.metadata["title"].strip()}</a><br>'
-                if content_html not in statement:
-                    statement.append(content_html)
-            text = f"{' '.join(statement)}"
-        return text
-
     def __call__(self, input: str) -> str:
         response = self.dbqa(input)
-        return self._build_output_text(response)
+        return response
