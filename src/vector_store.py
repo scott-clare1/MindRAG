@@ -5,7 +5,7 @@ import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import csv
 import sys
-from rag import EMBEDDING_MODEL
+from inference.inference import EMBEDDING_MODEL
 
 
 class VectorDB:
@@ -15,6 +15,7 @@ class VectorDB:
     ):
         self.embedding_model = embedding_model
         self.db_path = "vectorstore/db_faiss"
+        self.texts = None
 
     def load_documents(
         self, data: pd.DataFrame, chunk_size: int = 500, chunk_overlap: int = 50
