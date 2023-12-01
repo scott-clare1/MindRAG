@@ -1,9 +1,10 @@
-from langchain.llms import CTransformers
+from langchain.llms import LlamaCpp
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain import PromptTemplate
 from langchain.chains import RetrievalQA
 import langchain
+import os
 
 
 EMBEDDING_MODEL = HuggingFaceEmbeddings(
@@ -19,10 +20,15 @@ class VectorDBQuery:
         temperature: float = 0.01,
         max_new_tokens: int = 300,
     ):
-        self.llm = CTransformers(
-            model=model_path,
-            model_type="llama",
-            config={"max_new_tokens": max_new_tokens, "temperature": temperature},
+        self.model_path = model_path
+        self.llm = LlamaCpp(
+            model_path=self.model_path,
+            max_tokens=max_new_tokens,
+            temperature=temperature,
+            n_gpu_layers=40,
+            n_batch=512,
+            top_p=1,
+            verbose=True
         )
         self.qa_template = """Use the following pieces of information to answer the user's question.
                             If you don't know the answer, just say that you don't know, don't try to make up an answer.
@@ -33,7 +39,7 @@ class VectorDBQuery:
                             """
         self.embedding_model = embedding_model
 
-        self.vectordb = FAISS.load_local("vectorstore/db_faiss", self.embedding_model)
+        self.vectordb = FAISS.load_local(os.environ["VECTOR_DB_PATH"], self.embedding_model)
         self.prompt = PromptTemplate(
             template=self.qa_template, input_variables=["context", "question"]
         )

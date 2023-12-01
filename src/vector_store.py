@@ -6,15 +6,19 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import csv
 import sys
 from inference.inference import EMBEDDING_MODEL
+import os
+import argparse
 
 
 class VectorDB:
     def __init__(
         self,
         embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings = EMBEDDING_MODEL,
+            db_path: str = "vectorstore/db_faiss"
     ):
         self.embedding_model = embedding_model
-        self.db_path = "vectorstore/db_faiss"
+        self.db_path = db_path
+        os.environ["VECTOR_DB_PATH"] = self.db_path
         self.texts = None
 
     def load_documents(
@@ -35,7 +39,13 @@ class VectorDB:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--db_path")
+    args = parser.parse_args()
     data = pd.read_csv("data/nhs_mental_health_data.csv")
-    db = VectorDB()
+    if args.db_path:
+        db = VectorDB(db_path=args.db_path)
+    else:
+        db = VectorDB()
     db.load_documents(data)
     db.set_up_vector_db()
