@@ -42,7 +42,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--db_path")
     args = parser.parse_args()
-    data = pd.read_csv("data/nhs_mental_health_data.csv")
+    data_path = os.path.dirname(os.path.abspath(__file__)) + "data/nhs_mental_health_data.csv"
+    data = pd.read_csv(data_path)
     if args.db_path:
         db = VectorDB(db_path=args.db_path)
     else:
