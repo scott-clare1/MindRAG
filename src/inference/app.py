@@ -1,17 +1,17 @@
 from flask import Flask, jsonify, request
-from inference import VectorDBQuery
+from inference import InferenceHandler
 
 
 app = Flask(__name__)
 
-vector_db_query = VectorDBQuery("llama-2-7b-chat.Q4_K_M.gguf")
+llama_model = InferenceHandler("llama-2-7b-chat.Q4_K_M.gguf")
 
 
 @app.route("/inference", methods=["POST"])
 def predict():
     input = request.get_json()
     question = input["question"]
-    output = vector_db_query(question)
+    output = llama_model.set_question(question).fetch_context().generate()
     payload = jsonify({"output": output})
     return payload
 

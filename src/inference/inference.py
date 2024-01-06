@@ -1,56 +1,66 @@
-from langchain.llms import LlamaCpp
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain import PromptTemplate
-from langchain.chains import RetrievalQA
-import langchain
-import os
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import requests
 
 
-EMBEDDING_MODEL = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={"device": "cpu"}
-)
-
-
-class VectorDBQuery:
+class InferenceHandler:
     def __init__(
         self,
         model_path: str,
-        embedding_model: langchain.embeddings.huggingface.HuggingFaceEmbeddings = EMBEDDING_MODEL,
-        temperature: float = 0.01,
-        max_new_tokens: int = 300,
     ):
-        self.model_path = model_path
-        self.llm = LlamaCpp(
-            model_path=self.model_path,
-            max_tokens=max_new_tokens,
-            temperature=temperature,
-            n_gpu_layers=40,
-            n_batch=512,
-            top_p=1,
-            verbose=True
-        )
-        self.qa_template = """Use the following pieces of information to answer the user's question.
+        self._model_path = model_path
+        self.question = None
+        self.context = None
+        self._model = AutoModelForCausalLM.from_pretrained(self.model_path,
+                                             device_map="auto",
+                                             trust_remote_code=False,
+                                             revision="main")
+        self._tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=True)
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def tokenizer(self):
+        return self._tokenizer
+
+    def set_question(self, question: str):
+        self.question = question
+        return self
+
+    def fetch_context(self):
+        response = requests.post("http://127.0.0.1:5000/query", json={"question": self.question})
+        self.context = "\n".join(response.json()["output"])
+        return self
+
+    @property
+    def prompt(self):
+        return f"""Use the following pieces of information to answer the user's question.
                             If you don't know the answer, just say that you don't know, don't try to make up an answer.
-                            Context: {context}
-                            Question: {question}
+                            Context: {self.context}
+                            Question: {self.question}
                             Only return the helpful answer below and nothing else.
                             Helpful answer:
                             """
-        self.embedding_model = embedding_model
 
-        self.vectordb = FAISS.load_local(os.environ["VECTOR_DB_PATH"], self.embedding_model)
-        self.prompt = PromptTemplate(
-            template=self.qa_template, input_variables=["context", "question"]
+    def generate(
+            self,
+            use_cuda = False,
+            temperature=0.7,
+            top_p=0.95,
+            top_k=40,
+            max_new_tokens=512,
+            do_sample=True
+    ):
+        if use_cuda:
+            input_ids = tokenizer(self.prompt, return_tensors='pt').input_ids.cuda()
+        else:
+            input_ids = tokenizer(self.prompt, return_tensors='pt').input_ids
+        output = self.model.generate(
+            inputs=input_ids,
+            temperature=temperature,
+            do_sample=do_sample, top_p=top_p,
+            top_k=top_k,
+            max_new_tokens=max_new_tokens
         )
-        self.dbqa = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.vectordb.as_retriever(),
-            return_source_documents=True,
-            chain_type_kwargs={"prompt": self.prompt},
-        )
-
-    def __call__(self, input: str) -> str:
-        response = self.dbqa(input)
-        return response
+        return tokenizer.decode(output[0])
