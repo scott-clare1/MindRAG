@@ -1,0 +1,16 @@
+name: mind_rag
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - faiss-cpu==1.7.4
+      - ctransformers==0.2.26
+      - streamlit==1.26.0
+      - sentence-transformers==2.2.2
+      - pandas==2.0.3
+      - langchain==0.0.284
+      - beautifulsoup4==4.12.1
+      - flask==3.0.0
+      - llama-cpp-python==0.2.20

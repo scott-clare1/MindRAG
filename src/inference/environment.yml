@@ -1,0 +1,11 @@
+name: inference
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - langchain==0.0.284
+      - flask==3.0.0
+      - ctransformers==0.2.26
+      - llama-cpp-python==0.2.20

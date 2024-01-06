@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  vector-db:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    networks:
+      - my-network
+
+  client-server:
+    build:
+      context: .
+    depends_on:
+      - vector-db
+    ports:
+      - "8080:5000"
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
