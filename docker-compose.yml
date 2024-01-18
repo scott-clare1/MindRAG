@@ -1,0 +1,58 @@
+version: '3'
+
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  vector-db:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8000:8000"
+    networks:
+      - my-network
+
+  client-server:
+    build:
+      context: .
+      dockerfile: ./src/vector_database/client/Dockerfile
+    container_name: client-server
+    depends_on:
+      - vector-db
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src/vector_database/client:/app
+    networks:
+      - my-network
+
+  llm-inference:
+    build:
+      context: .
+      dockerfile: ./src/inference/Dockerfile
+    container_name: llm-inference
+    depends_on:
+      - client-server
+      - vector-db
+    ports:
+     - "5001:5001"
+    volumes:
+      - ./src/inference:/app
+    networks:
+      - my-network
+
+  ui-server:
+    build:
+      context: .
+      dockerfile: ./src/frontend/Dockerfile
+    container_name: ui_server
+    depends_on:
+      - vector-db
+      - client-server
+      - llm-inference
+    volumes:
+      - ./src/frontend/:/app
+    ports:
+    - "8080:8080"
+    networks:
+      - my-network
