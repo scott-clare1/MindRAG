@@ -23,8 +23,8 @@ def build_output_text(response: dict) -> str:
     return text
 
 
-def post(question):
-    response = requests.post("http://localhost:5000/inference", json={"question": question})
+def post(question: str) -> dict:
+    response = requests.post("http://llm-inference:5001/inference", json={"question": question})
     return response.json()["output"]
 
 
@@ -63,7 +63,7 @@ for idx, i in enumerate(st.session_state["chat_history"]):
         elif idx == len(st.session_state["chat_history"]) - 1:
             with st.status("Thinking...", expanded=True) as status:
                 output = post(i["content"])
-                st.write(build_output_text(output), unsafe_allow_html=True)
+                st.write(output, unsafe_allow_html=True)
                 st.session_state["chat_history"][idx]["content"] = output
                 status.update(label="Complete!", state="complete", expanded=True)
         else:

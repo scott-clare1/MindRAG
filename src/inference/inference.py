@@ -1,5 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import requests
+import time
 
 
 class InferenceHandler:
@@ -10,10 +11,7 @@ class InferenceHandler:
         self._model_path = model_path
         self.question = None
         self.context = None
-        self._model = AutoModelForCausalLM.from_pretrained(self.model_path,
-                                             device_map="auto",
-                                             trust_remote_code=False,
-                                             revision="main")
+        self._model = AutoModelForCausalLM.from_pretrained(self.model_path)
         self._tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=True)
 
     @property
@@ -26,6 +24,17 @@ class InferenceHandler:
 
     def set_question(self, question: str):
         self.question = question
+        return self
+
+    def wait_until_server_up(self):
+        while True:
+            try:
+                response = requests.get("http://client-server:5000/")
+                if response.status_code == 200:
+                    break
+            except ConnectionError:
+                time.sleep(3)
+                continue
         return self
 
     def fetch_context(self):
@@ -64,3 +73,6 @@ class InferenceHandler:
             max_new_tokens=max_new_tokens
         )
         return tokenizer.decode(output[0])
+
+    def __call__(self, question: str):
+        return self.set_question(question).wait_until_server_up().fetch_context().generate()

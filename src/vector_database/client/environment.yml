@@ -1,0 +1,12 @@
+name: vector_database
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - faiss-cpu==1.7.4
+      - pandas==2.0.3
+      - langchain==0.0.284
+      - flask==3.0.0
+      - chromadb==0.4.21
