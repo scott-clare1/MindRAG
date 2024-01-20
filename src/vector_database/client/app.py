@@ -1,24 +1,47 @@
-from flask import Flask, jsonify, request
+from fastapi import FastAPI
 from chroma_client import VectorDB
 import pandas as pd
+from pydantic import BaseModel
+from typing import Dict, List
 
-app = Flask(__name__)
+
+class Query(BaseModel):
+    question: str
+
+
+app = FastAPI()
 
 data = pd.read_csv("data/nhs_mental_health_data.csv")
 
 vector_db_client = VectorDB(data).wait_until_server_up().build_documents().build_collections()
 
-@app.route("/", methods=["GET"])
-def ping():
-    return jsonify({'status': 'ok'})
 
-@app.route("/query", methods=["POST"])
-def query():
-    input = request.get_json()
-    question = input["question"]
-    output = vector_db_client.query(question)
-    payload = jsonify({"output": output})
-    return payload
+@app.get("/")
+async def ping():
+    return {'status': 'ok'}
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+
+@app.post("/query")
+async def create_context(payload: Query) -> Dict[str, str]:
+    vector_db_client.query(payload.question)
+    return {"message": "context created successfully"}
+
+
+@app.get("/question")
+async def read_question() -> str:
+    return vector_db_client.question
+
+
+@app.get("/documents")
+async def read_documents() -> List[str]:
+    return vector_db_client.context_documents
+
+
+@app.get("/urls")
+async def read_urls() -> List[str]:
+    return vector_db_client.context_urls
+
+
+@app.get("/titles")
+async def read_titles() -> List[str]:
+    return vector_db_client.context_titles

@@ -1,6 +1,6 @@
 import streamlit as st
-import argparse
 import requests
+from typing import Dict, List
 
 
 def build_output_text(response: dict) -> str:
@@ -23,9 +23,25 @@ def build_output_text(response: dict) -> str:
     return text
 
 
-def post(question: str) -> dict:
-    response = requests.post("http://llm-inference:5001/inference", json={"question": question})
-    return response.json()["output"]
+def create(question: str):
+    return requests.post("http://client-server:5000/query", json={"question": question})
+
+
+def get_documents():
+    return requests.get("http://client-server:5000/documents").json()
+
+
+def get_urls():
+    return requests.get("http://client-server:5000/urls").json()
+
+
+def get_titles():
+    return requests.get("http://client-server:5000/titles").json()
+
+
+def get_answer():
+    return requests.get("http://llm-inference:5001/inference").json()
+
 
 
 st.title("MindRAG")
@@ -62,7 +78,8 @@ for idx, i in enumerate(st.session_state["chat_history"]):
             st.write(i["content"])
         elif idx == len(st.session_state["chat_history"]) - 1:
             with st.status("Thinking...", expanded=True) as status:
-                output = post(i["content"])
+                create(i["content"])
+                output = get_response()
                 st.write(output, unsafe_allow_html=True)
                 st.session_state["chat_history"][idx]["content"] = output
                 status.update(label="Complete!", state="complete", expanded=True)

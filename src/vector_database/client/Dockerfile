@@ -4,5 +4,4 @@ COPY ./src/vector_database/client/requirements.txt /app
 RUN pip install -r /app/requirements.txt
 COPY ./src/vector_database/client .
 EXPOSE 5000
-ENV FLASK_APP=app.py
-CMD ["flask", "run"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]

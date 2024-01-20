@@ -1,5 +1,6 @@
 import pysqlite3
 import sys
+
 sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 import pandas as pd
 import uuid
@@ -7,8 +8,6 @@ import chromadb
 from chromadb.config import Settings
 import csv
 import sys
-import os
-import argparse
 from langchain.document_loaders.dataframe import DataFrameLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import requests
@@ -19,15 +18,39 @@ import time
 class VectorDB:
 
     def __init__(
-        self,
+            self,
             data: pd.DataFrame
     ):
         self.data = data
         self.docs = None
         self.collection = None
+        self._context_documents = None
+        self._context_urls = None
+        self._context_titles = None
+        self._question = None
         self.collection_name = "mind_rag_collection"
 
-    def wait_until_server_up(self):
+    @property
+    def client(self):
+        return chromadb.HttpClient(host="vector-db", port="8000", settings=Settings(allow_reset=True))
+
+    @property
+    def context_documents(self):
+        return self._context_documents
+
+    @property
+    def context_urls(self):
+        return self._context_urls
+
+    @property
+    def context_titles(self):
+        return self._context_titles
+
+    @property
+    def question(self):
+        return self._question
+
+    def wait_until_server_up(self) -> "VectorDB":
         while True:
             try:
                 response = requests.get("http://vector-db:8000/api/v1/heartbeat")
@@ -38,17 +61,13 @@ class VectorDB:
                 continue
         return self
 
-    @property
-    def client(self):
-        return chromadb.HttpClient(host="vector-db", port="8000", settings=Settings(allow_reset=True))
-
-    def reset_db(self):
+    def reset_db(self) -> "VectorDB":
         self.client.reset()
         return self
 
     def build_documents(
-        self, chunk_size: int = 500, chunk_overlap: int = 50
-    ):
+            self, chunk_size: int = 300, chunk_overlap: int = 50
+    ) -> "VectorDB":
         csv.field_size_limit(sys.maxsize)
         loader = DataFrameLoader(self.data, page_content_column="documents")
         documents = loader.load()
@@ -58,7 +77,7 @@ class VectorDB:
         self.docs = text_splitter.split_documents(documents)
         return self
 
-    def build_collections(self):
+    def build_collections(self) -> "VectorDB":
         self.collection = self.client.get_or_create_collection(self.collection_name)
         for doc in self.docs:
             self.collection.add(
@@ -66,17 +85,15 @@ class VectorDB:
             )
         return self
 
-    def query(self, question: str):
+    def query(self, question: str) -> "VectorDB":
+        self._question = question
         response = self.collection.query(
-            query_texts=[question],
+            query_texts=[self.question],
             n_results=10,
         )
-        documents = response["documents"][0]
+        self._context_documents = response["documents"][0]
+
         metadata = response["metadatas"][0]
-        links = [item["links"] for item in metadata]
-        titles = [item["title"] for item in metadata]
-        return {
-            "documents": documents,
-            "links": links,
-            "title": titles
-        }
+        self._context_urls = [item["links"] for item in metadata]
+        self._context_titles = [item["title"] for item in metadata]
+        return self
