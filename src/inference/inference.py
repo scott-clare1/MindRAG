@@ -45,19 +45,19 @@ class LLMClient:
             "stop": ["\n", "###"]
         }
 
-    def fetch_question(self) -> "InferenceHandler":
+    def fetch_question(self) -> "LLMClient":
         self._question = requests.get("http://client-server:5000/question").json()
         return self
 
-    def fetch_context(self) -> "InferenceHandler":
+    def fetch_context(self) -> "LLMClient":
         response = requests.get("http://client-server:5000/documents")
         self._context = "\n".join(response.json())
         return self
 
     def fetch_answer(self) -> str:
-        self._response = requests.post("http://llama-server:8002/v1/completions", json=self.payload).json()
+        self._response = requests.post("http://llama-server:8000/v1/completions", json=self.payload).json()
         return self.answer
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self) -> str:
         return self.fetch_question().fetch_context().fetch_answer()
 

@@ -50,7 +50,7 @@ class ChromaClient:
     def question(self):
         return self._question
 
-    def wait_until_server_up(self) -> "VectorDB":
+    def wait_until_server_up(self) -> "ChromaClient":
         while True:
             try:
                 response = requests.get("http://vector-db:8000/api/v1/heartbeat")
@@ -61,13 +61,13 @@ class ChromaClient:
                 continue
         return self
 
-    def reset_db(self) -> "VectorDB":
+    def reset_db(self) -> "ChromaClient":
         self.client.reset()
         return self
 
     def build_documents(
             self, chunk_size: int = 300, chunk_overlap: int = 50
-    ) -> "VectorDB":
+    ) -> "ChromaClient":
         csv.field_size_limit(sys.maxsize)
         loader = DataFrameLoader(self.data, page_content_column="documents")
         documents = loader.load()
@@ -77,7 +77,7 @@ class ChromaClient:
         self.docs = text_splitter.split_documents(documents)
         return self
 
-    def build_collections(self) -> "VectorDB":
+    def build_collections(self) -> "ChromaClient":
         self.collection = self.client.get_or_create_collection(self.collection_name)
         for doc in self.docs:
             self.collection.add(
@@ -85,7 +85,7 @@ class ChromaClient:
             )
         return self
 
-    def query(self, question: str) -> "VectorDB":
+    def query(self, question: str) -> "ChromaClient":
         self._question = question
         response = self.collection.query(
             query_texts=[self.question],
