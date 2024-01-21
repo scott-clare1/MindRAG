@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from typing import Dict, List
 
 
 def build_output_text(response: dict) -> str:
@@ -79,7 +78,7 @@ for idx, i in enumerate(st.session_state["chat_history"]):
         elif idx == len(st.session_state["chat_history"]) - 1:
             with st.status("Thinking...", expanded=True) as status:
                 create(i["content"])
-                output = get_response()
+                output = get_answer()
                 st.write(output, unsafe_allow_html=True)
                 st.session_state["chat_history"][idx]["content"] = output
                 status.update(label="Complete!", state="complete", expanded=True)

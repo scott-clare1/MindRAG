@@ -1,5 +1,3 @@
 langchain==0.0.284
 fastapi==0.109.0
 uvicorn[standard]==0.26.0
-ctransformers==0.2.26
-llama-cpp-python==0.2.20

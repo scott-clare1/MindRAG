@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from chroma_client import VectorDB
+from chroma_client import ChromaClient
 import pandas as pd
 from pydantic import BaseModel
 from typing import Dict, List
@@ -13,7 +13,7 @@ app = FastAPI()
 
 data = pd.read_csv("data/nhs_mental_health_data.csv")
 
-vector_db_client = VectorDB(data).wait_until_server_up().build_documents().build_collections()
+vector_db_client = ChromaClient(data).wait_until_server_up().build_documents().build_collections()
 
 
 @app.get("/")

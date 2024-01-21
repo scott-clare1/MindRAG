@@ -8,7 +8,18 @@ services:
   vector-db:
     image: ghcr.io/chroma-core/chroma:latest
     ports:
-      - "8000:8000"
+      - "8001:8000"
+    networks:
+      - my-network
+
+  llama-server:
+    image: ghcr.io/abetlen/llama-cpp-python:latest
+    ports:
+      - "8002:8000"
+    volumes:
+        - ./models:/models
+    environment:
+      - MODEL=/models/llama-2-7b-chat.Q2_K.gguf
     networks:
       - my-network
 
@@ -34,6 +45,7 @@ services:
     depends_on:
       - client-server
       - vector-db
+      - llama-server
     ports:
      - "5001:5001"
     volumes:
@@ -50,6 +62,7 @@ services:
       - vector-db
       - client-server
       - llm-inference
+      - llama-server
     volumes:
       - ./src/frontend/:/app
     ports:

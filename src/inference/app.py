@@ -1,13 +1,10 @@
 from fastapi import FastAPI
-from inference import InferenceHandler
-
-
-MODEL_PATH = "models/llama-2-7b-chat.Q2_K.gguf"
+from inference import LLMClient
 
 
 app = FastAPI()
 
-llm = InferenceHandler(MODEL_PATH).wait_until_server_up()
+llm = LLMClient()
 
 
 @app.get("/")

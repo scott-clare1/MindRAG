@@ -15,7 +15,7 @@ from requests.exceptions import ConnectionError
 import time
 
 
-class VectorDB:
+class ChromaClient:
 
     def __init__(
             self,

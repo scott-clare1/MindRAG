@@ -1,50 +1,31 @@
-from llama_cpp import Llama
 import requests
-import time
 from typing import Optional
-from typing import Dict, List
-from fastapi import FastAPI
-
-app = FastAPI()
+from typing import Dict, List, Union
 
 
-@app.get("/")
-def ping():
-    return {'status': 'ok'}
-
-
-class InferenceHandler:
-    question: Optional[str]
-    context: Optional[str]
-
-    def __init__(
-        self,
-        model_path: str,
-    ):
-        self._model_path = model_path
-        self._context = None
-        self._response = None
-        self._question = None
+class LLMClient:
+    _question: Optional[str] = None
+    _context: Optional[str] = None
+    _response: Optional[Dict[str, Union[str, int, List[dict]]]] = None
 
     @property
-    def model_path(self) -> str:
-        return self._model_path
-
-    @property
-    def model(self):
-        return Llama(model_path=self._model_path)
-
-    @property
-    def question(self):
+    def question(self) -> Optional[str]:
         return self._question
 
     @property
-    def context(self):
+    def context(self) -> Optional[str]:
         return self._context
 
     @property
-    def response(self):
+    def response(self) -> Optional[Dict[str, Union[str, int, List[dict]]]]:
         return self._response
+
+    @property
+    def answer(self) -> Optional[str]:
+        if self.response:
+            return self.response["choices"][0]["text"]
+        else:
+            return None
 
     @property
     def prompt(self) -> str:
@@ -57,16 +38,12 @@ class InferenceHandler:
             Helpful answer:
         """
 
-    def wait_until_server_up(self) -> "InferenceHandler":
-        while True:
-            try:
-                response = requests.get("http://client-server:5000/")
-                if response.status_code == 200:
-                    break
-            except ConnectionError:
-                time.sleep(3)
-                continue
-        return self
+    @property
+    def payload(self) -> Dict[str, Union[str, List]]:
+        return {
+            "prompt": self.prompt,
+            "stop": ["\n", "###"]
+        }
 
     def fetch_question(self) -> "InferenceHandler":
         self._question = requests.get("http://client-server:5000/question").json()
@@ -77,23 +54,10 @@ class InferenceHandler:
         self._context = "\n".join(response.json())
         return self
 
-    def generate(
-            self,
-            temperature=0.7,
-            top_p=0.95,
-            top_k=40,
-            max_tokens=512,
-    ) -> "InferenceHandler":
-        output = self.model(
-            self.prompt,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_tokens=max_tokens
-        )
-        self._response = output["choices"][0]["text"]
-        return self.response
+    def fetch_answer(self) -> str:
+        self._response = requests.post("http://llama-server:8002/v1/completions", json=self.payload).json()
+        return self.answer
 
     def __call__(self, *args, **kwargs):
-        return self.fetch_question().fetch_context().generate()
+        return self.fetch_question().fetch_context().fetch_answer()
 
